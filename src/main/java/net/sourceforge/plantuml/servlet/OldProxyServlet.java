@@ -32,6 +32,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -46,6 +47,7 @@ import net.sourceforge.plantuml.SourceStringReader;
  * and renders it.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="oldproxy",urlPatterns = {"/proxy/*"})
 public class OldProxyServlet extends HttpServlet {
 
     /**

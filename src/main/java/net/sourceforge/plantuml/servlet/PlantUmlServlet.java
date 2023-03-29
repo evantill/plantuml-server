@@ -25,6 +25,7 @@ package net.sourceforge.plantuml.servlet;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -58,6 +59,16 @@ import java.util.regex.Pattern;
  * Modified by Pablo Lalloni
  * Modified by Maxime Sinclair
  */
+@WebServlet(
+        name = "plantumlservlet",
+
+        urlPatterns = {
+                "/welcome",
+                "/uml/*",
+                "/form",
+                "/start/*"
+        }
+)
 @SuppressWarnings("SERIAL")
 public class PlantUmlServlet extends HttpServlet {
 
@@ -71,6 +82,7 @@ public class PlantUmlServlet extends HttpServlet {
      * Regex pattern to fetch last part of the URL.
      */
     private static final Pattern URL_PATTERN = Pattern.compile("^.*[^a-zA-Z0-9\\-\\_]([a-zA-Z0-9\\-\\_]+)");
+    public static final String INDEX_PAGE = "/";
 
     static {
         OptionFlags.ALLOW_INCLUDE = false;
@@ -101,11 +113,10 @@ public class PlantUmlServlet extends HttpServlet {
             // diagram index to render
             final int idx = UrlDataExtractor.getIndex(adapter.getRequest().getRequestURI());
 
-            // forward to index.jsp
-            prepareRequestForDispatch(request, textFromRequest.get(), idx);
-            final RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
-            dispatcher.forward(request, response);
-        }
+        // forward to index page
+        prepareRequestForDispatch(request, textFromRequest.get(), idx);
+        final RequestDispatcher dispatcher = request.getRequestDispatcher(INDEX_PAGE);
+        dispatcher.forward(request, response);
     }
 
     @Override

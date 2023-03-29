@@ -23,6 +23,7 @@
  */
 package net.sourceforge.plantuml.servlet;
 
+import jakarta.servlet.annotation.WebServlet;
 import net.sourceforge.plantuml.FileFormat;
 
 /**
@@ -30,6 +31,7 @@ import net.sourceforge.plantuml.FileFormat;
  * This servlet produces the UML diagram in SVG format.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="svgservlet",urlPatterns = {"/svg/*"})
 public class SvgServlet extends UmlDiagramService {
 
     /**

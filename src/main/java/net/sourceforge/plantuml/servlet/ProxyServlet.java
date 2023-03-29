@@ -37,6 +37,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLPeerUnverifiedException;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -54,6 +55,7 @@ import net.sourceforge.plantuml.core.UmlSource;
  * and renders it.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="proxyservlet",urlPatterns = {"/proxy"})
 public class ProxyServlet extends HttpServlet {
 
     static {

@@ -23,6 +23,7 @@
  */
 package net.sourceforge.plantuml.servlet;
 
+import jakarta.servlet.annotation.WebServlet;
 import net.sourceforge.plantuml.FileFormat;
 
 /**
@@ -30,8 +31,8 @@ import net.sourceforge.plantuml.FileFormat;
  * This servlet produces the UML diagram in EPS Text format.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="epstextservlet",urlPatterns = {"/epstext/*"})
 public class EpsTextServlet extends UmlDiagramService {
-
     /**
      * Gives the wished output format of the diagram.
      * This value is used by the DiagramResponse class.

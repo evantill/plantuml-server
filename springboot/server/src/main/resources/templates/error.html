@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base th:href="@{/}"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta http-equiv="expires" content="0"/>
+    <meta http-equiv="pragma" content="no-cache"/>
+    <meta http-equiv="cache-control" content="no-cache, must-revalidate"/>
+    <link rel="stylesheet" th:href="@{/plantuml.css}" type="text/css"/>
+    <link rel="icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
+    <link rel="shortcut icon" th:href="@{/favicon.ico}" type="image/x-icon"/>
+    <title>PlantUMLServer Error</title>
+</head>
+<body>
+<p>
+    Sorry, but things didn't work out as planned.
+</p>
+<hr/>
+
+<ul>
+    <li>Timestamp: <span th:text="${timestamp}">Timestamp</span></li>
+    <li>Path: <span th:text="${path}">Path</span></li>
+    <li>Error: <span th:text="${error}">Error</span></li>
+    <li>Status: <span th:text="${status}">Error</span></li>
+    <li>Message: <span th:text="${message}">Error</span></li>
+    <li>Exception: <span th:text="${exception}">Error</span></li>
+    <li>Trace: <span th:text="${trace}">Error</span></li>
+</ul>
+
+<hr/>
+</body>
+</html>

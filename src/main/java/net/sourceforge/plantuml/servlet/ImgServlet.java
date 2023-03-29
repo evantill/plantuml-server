@@ -23,6 +23,7 @@
  */
 package net.sourceforge.plantuml.servlet;
 
+import jakarta.servlet.annotation.WebServlet;
 import net.sourceforge.plantuml.FileFormat;
 
 /**
@@ -30,6 +31,7 @@ import net.sourceforge.plantuml.FileFormat;
  * This servlet produces the UML diagram in PNG format.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name = "imgservlet", urlPatterns = {"/png/*", "/img/*"})
 public class ImgServlet extends UmlDiagramService {
 
     /**

@@ -23,6 +23,7 @@
  */
 package net.sourceforge.plantuml.servlet;
 
+import jakarta.servlet.annotation.WebServlet;
 import net.sourceforge.plantuml.FileFormat;
 
 /**
@@ -30,6 +31,7 @@ import net.sourceforge.plantuml.FileFormat;
  * This servlet produces the UML diagram in Base64 format.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="base64servlet",urlPatterns = {"/base64/*"})
 public class Base64Servlet extends UmlDiagramService {
 
     /**

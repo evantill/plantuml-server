@@ -28,6 +28,7 @@ import java.io.IOException;
 import javax.imageio.IIOException;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -41,6 +42,7 @@ import net.sourceforge.plantuml.servlet.utility.UrlDataExtractor;
  * This servlet produces the image map of the diagram in HTML format.
  */
 @SuppressWarnings("SERIAL")
+@WebServlet(name="mapservlet",urlPatterns = {"/map/*"})
 public class MapServlet extends HttpServlet {
 
     @Override

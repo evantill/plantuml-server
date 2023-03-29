@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/*@thymesVar id="data" type="io.plantuml.server.IndexData"*/-->
+
+<div th:fragment="githubribbon">
+    <a href="https://github.com/plantuml/plantuml-server">
+        <img style="position: absolute; top: 0; right: 0; border: 0;"
+             src="https://github-camo.global.ssl.fastly.net/a6677b08c955af8400f44c6298f40e7d19cc5b2d/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f677261795f3664366436642e706e67"
+             alt="Fork me on GitHub"
+             data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png"></a>
+</div>
+
+<div th:fragment="socialbuttons">
+    <!-- Insert here the html code of your social buttons -->
+    <p><i>Insert here the html code of your social buttons</i></p>
+</div>
+
+<div th:fragment="socialbuttons2">
+    <div style="float:right;">
+        <a href="https://discord.gg/sXhzexAQGh" style="text-decoration: none;">
+            <img src="https://img.shields.io/discord/1083727021328306236?color=5865F2&amp;logo=discord&amp;logoColor=white"
+                 alt="Discord server">
+        </a>
+        &nbsp;
+        <img src="https://img.shields.io/endpoint?url=https://www.plantuml.com/plantuml/badge">
+        &nbsp;
+        <img src="https://img.shields.io/endpoint?url=https://www.plantuml.com/plantuml/rate">
+        &nbsp;
+        <img src="https://img.shields.io/endpoint?url=https://www.plantuml.com/plantuml/rate?peak">
+    </div>
+</div>
+
+<div th:fragment="footer">
+    <div id="footer">
+        <p>PlantUML Server Version <span th:text="${data.plantumlVersion}">PlantUML Version</span></p>
+    </div>
+</div>
+
+</body>
+</html>
+

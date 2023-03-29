@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -37,6 +38,7 @@ import net.sourceforge.plantuml.syntax.LanguageDescriptor;
  * Servlet used to inspect the language keywords of the running PlantUML server.
  * Same as {@code java -jar plantuml.jar -language}
  */
+@WebServlet(name="languageservlet",urlPatterns = {"/language"})
 public class LanguageServlet extends HttpServlet {
 
     @Override

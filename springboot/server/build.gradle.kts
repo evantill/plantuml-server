@@ -24,6 +24,7 @@ repositories {
 }
 
 val plantumlVersion = "1.2023.1"
+val codemirrorVersion = "5.63.0"
 
 dependencies {
 	implementation("net.sourceforge.plantuml:plantuml:${plantumlVersion}")
@@ -35,6 +36,13 @@ dependencies {
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	implementation("org.webjars.npm:codemirror:${codemirrorVersion}")
+	implementation("org.webjars:webjars-locator:0.30")
+
+
+	implementation("org.webjars:bootstrap:3.3.6")
+	implementation("org.webjars:bootstrap-datepicker:1.0.1")
+	implementation("org.webjars:jquery:1.9.1")
 }
 
 tasks.withType<KotlinCompile> {
@@ -52,6 +60,9 @@ sourceSets{
 	main{
 		java{
 			srcDir(project.layout.projectDirectory.dir("../../src/main/java"))
+		}
+		resources{
+			srcDir(project.layout.projectDirectory.dir("../../src/main/resources"))
 		}
 	}
 }
