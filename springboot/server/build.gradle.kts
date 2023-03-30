@@ -43,6 +43,8 @@ dependencies {
 	implementation("org.webjars:bootstrap:3.3.6")
 	implementation("org.webjars:bootstrap-datepicker:1.0.1")
 	implementation("org.webjars:jquery:1.9.1")
+	runtimeOnly("org.apache.xmlgraphics:fop:2.8")
+	runtimeOnly("org.apache.xmlgraphics:batik-all:1.16")
 }
 
 tasks.withType<KotlinCompile> {

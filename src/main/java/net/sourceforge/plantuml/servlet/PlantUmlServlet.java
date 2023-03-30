@@ -33,21 +33,21 @@ import net.sourceforge.plantuml.OptionFlags;
 import net.sourceforge.plantuml.api.PlantumlUtils;
 import net.sourceforge.plantuml.code.Transcoder;
 import net.sourceforge.plantuml.code.TranscoderUtil;
-import net.sourceforge.plantuml.png.MetadataTag;
-import net.sourceforge.plantuml.servlet.utility.Assertions;
+import net.sourceforge.plantuml.servlet.component.DiagramExtractor.ExtractionException;
+import net.sourceforge.plantuml.servlet.component.FaultBackDiagramExtractor;
+import net.sourceforge.plantuml.servlet.component.PlantUmlRequest;
+import net.sourceforge.plantuml.servlet.component.PngMetaExtractor;
+import net.sourceforge.plantuml.servlet.component.TextReqParamExtractor;
+import net.sourceforge.plantuml.servlet.component.UmlReqPathExtractor;
+import net.sourceforge.plantuml.servlet.component.UrlParamExtractor;
 import net.sourceforge.plantuml.servlet.utility.Configuration;
-import net.sourceforge.plantuml.servlet.utility.HtmlUtils;
 import net.sourceforge.plantuml.servlet.utility.UmlExtractor;
 import net.sourceforge.plantuml.servlet.utility.UrlDataExtractor;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import static net.sourceforge.plantuml.servlet.component.DiagramExtractor.Diagram;
 
 /**
  * Original idea from Achim Abeling for Confluence macro.
@@ -78,10 +78,6 @@ public class PlantUmlServlet extends HttpServlet {
      */
     private static final String DEFAULT_ENCODED_TEXT = "SyfFKj2rKt3CoKnELR1Io4ZDoSa70000";
 
-    /**
-     * Regex pattern to fetch last part of the URL.
-     */
-    private static final Pattern URL_PATTERN = Pattern.compile("^.*[^a-zA-Z0-9\\-\\_]([a-zA-Z0-9\\-\\_]+)");
     public static final String INDEX_PAGE = "/";
 
     static {
@@ -91,32 +87,23 @@ public class PlantUmlServlet extends HttpServlet {
         }
     }
 
-    private static String stringToHTMLString(String string) {
-        return HtmlUtils.htmlEscape(string);
-    }
-
-
     @Override
     public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         request.setCharacterEncoding("UTF-8");
-        PlantUmlRequestAdapter adapter = new PlantUmlRequestAdapter(request);
-
-        // textual diagram source
-        Optional<String> textFromRequest = getTextFromRequest(adapter);
-        Assertions.assertTrimmedIfPresent(textFromRequest, "text parameter from request");
+        PlantUmlRequest plantUmlRequest = new PlantUmlRequest(request);
+        Optional<UmlReqPathExtractor.Diagram> diagramFromRequest = extractDiagramFrom(plantUmlRequest);
 
         // no Text form has been submitted
-        if (textFromRequest.isEmpty()) {
+        if (diagramFromRequest.isEmpty()) {
             redirectNow(request, response, DEFAULT_ENCODED_TEXT);
-
         } else {
             // diagram index to render
-            final int idx = UrlDataExtractor.getIndex(adapter.getRequest().getRequestURI());
-
-        // forward to index page
-        prepareRequestForDispatch(request, textFromRequest.get(), idx);
-        final RequestDispatcher dispatcher = request.getRequestDispatcher(INDEX_PAGE);
-        dispatcher.forward(request, response);
+            final int idx = UrlDataExtractor.getIndex(plantUmlRequest.getRequest().getRequestURI());
+            // forward to index page
+            prepareRequestForDispatch(request, diagramFromRequest.get().content(), idx);
+            final RequestDispatcher dispatcher = request.getRequestDispatcher(INDEX_PAGE);
+            dispatcher.forward(request, response);
+        }
     }
 
     @Override
@@ -126,7 +113,7 @@ public class PlantUmlServlet extends HttpServlet {
     ) throws ServletException, IOException {
         request.setCharacterEncoding("UTF-8");
 
-        PlantUmlRequestAdapter adapter = new PlantUmlRequestAdapter(request);
+        PlantUmlRequest adapter = new PlantUmlRequest(request);
         // diagram index to render
         final int idx = UrlDataExtractor.getIndex(request.getRequestURI());
 
@@ -134,10 +121,9 @@ public class PlantUmlServlet extends HttpServlet {
         String encoded = DEFAULT_ENCODED_TEXT;
         //TODO reveal intention: do not hide the error.
         try {
-            Optional<String> text = getTextFromRequest(adapter);
-            Assertions.assertTrimmedIfPresent(text, "text request parameter");
-            if (text.isPresent()) {
-                encoded = getTranscoder().encode(text.get());
+            Optional<Diagram> diagram = extractDiagramFrom(adapter);
+            if (diagram.isPresent()) {
+                encoded = getTranscoder().encode(diagram.get().content());
             }
         } catch (Exception e) {
             encoded = DEFAULT_ENCODED_TEXT;
@@ -149,109 +135,25 @@ public class PlantUmlServlet extends HttpServlet {
     /**
      * Get textual diagram.
      * Search for textual diagram in following order:
-     * 1. URL {@link PlantUmlServlet.getTextFromUrl}
-     * 2. metadata
-     * 3. request parameter "text"
+     * 1. Encoded in the url following the `/uml/${encoded}` pattern
+     * 2. request parameter "url"
+     * 3. PNG image metadata
+     * 4. request parameter "text"
      *
-     * @param request http request
+     * @param request http plantuml request
      *
-     * @return if successful textual diagram source; otherwise empty string
+     * @return if successful textual diagram source; otherwise empty
      *
-     * @throws IOException if an input or output exception occurred
+     * @throws ExtractionException if an extraction exception occurred
      */
-    private Optional<String> getTextFromRequest(PlantUmlRequestAdapter request) throws IOException {
-        Optional<String> text;
-        // 1. URL
-        try {
-            text = getTextFromUrl(request);
-            if (text.isPresent()) {
-                return text;
-            }
-        } catch (Exception e) {
-            //TODO can we remove this try/catch
-            e.printStackTrace();
-        }
-        // 2. metadata
-        Optional<String> metadata = request.getMetadata();
-        if (metadata.isPresent()) {
-            try (InputStream img = getImage(new URL(metadata.get()))) {
-                MetadataTag metadataTag = new MetadataTag(img, "plantuml");
-                Optional<String> data = Optional.ofNullable(metadataTag.getData());
-                if (data.isPresent()) {
-                    return data;
-                }
-            }
-        }
-        // 3. request parameter text
-        return request.getCleanedText();
-    }
-
-
-    /**
-     * Get textual diagram source from URL.
-     *
-     * @param request http request which contains the source URL
-     *
-     * @return if successful textual diagram source from URL; otherwise empty string
-     *
-     * @throws IOException if an input or output exception occurred
-     */
-    private String getTextFromUrl(HttpServletRequest request) throws IOException {
-        // textual diagram source from request URI
-        String url = request.getRequestURI();
-        if (url.contains("/uml/") && !url.endsWith("/uml/")) {
-            final String encoded = UrlDataExtractor.getEncodedDiagram(request.getRequestURI(), "");
-            if (!encoded.isEmpty()) {
-                return getTranscoder().decode(encoded);
-            }
-        }
-        // textual diagram source from "url" parameter
-        url = request.getParameter("url");
-        if (url != null && !url.trim().isEmpty()) {
-            // Catch the last part of the URL if necessary
-            final Matcher matcher = URL_PATTERN.matcher(url);
-            if (matcher.find()) {
-                url = matcher.group(1);
-            }
-            return getTranscoder().decode(url);
-        }
-        // nothing found
-        return "";
-    }
-
-    /**
-     * Get textual diagram source from URL.
-     *
-     * @param request http request which contains the source URL
-     * @return if successful textual diagram source from URL; otherwise empty string
-     * @throws IOException if an input or output exception occurred
-     */
-    private Optional<String> getTextFromUrl(PlantUmlRequestAdapter adapter) throws IOException {
-        // textual diagram source from request URI
-        PlantUmlUrlProcessor processor = new PlantUmlUrlProcessor(adapter);
-        Optional<String> url = adapter.getRequestURI();
-        if (url.isPresent() && processor.isUml()) {
-            final String encoded = UrlDataExtractor.getEncodedDiagram(url.get(), "");
-            if (!encoded.isEmpty()) {
-                //not sure if a null value can be returned : we are defensive programming here
-                return Optional.ofNullable(getTranscoder().decode(encoded));
-            }
-        }
-        // textual diagram source from "url" parameter
-        url = adapter.getCleanedUrl();
-        if (url.isPresent()) {
-            // Catch the last part of the URL if necessary
-            final Matcher matcher = URL_PATTERN.matcher(url.get());
-            if (matcher.find()) {
-                url = Optional.ofNullable(matcher.group(1));
-            }
-            if (url.isPresent()) {
-                //not sure if a null value can be returned : we are defensive programming here
-                return Optional.ofNullable(getTranscoder().decode(url.get()));
-            }
-        }
-        // nothing found
-        return Optional.empty();
+    private Optional<UmlReqPathExtractor.Diagram> extractDiagramFrom(PlantUmlRequest request) throws ExtractionException {
+        Transcoder transcoder = getTranscoder();
+        UmlReqPathExtractor umlReqPathExtractor =new UmlReqPathExtractor(transcoder,request);
+        UrlParamExtractor urlParamExtractor =new UrlParamExtractor(transcoder,request);
+        PngMetaExtractor pngMetaExtractor = new PngMetaExtractor(transcoder,request);
+        TextReqParamExtractor textParamExtractor = new TextReqParamExtractor(request);
+        FaultBackDiagramExtractor extractors = new FaultBackDiagramExtractor(umlReqPathExtractor,urlParamExtractor,pngMetaExtractor,textParamExtractor);
+        return extractors.extract();
     }
 
     /**
@@ -344,46 +246,5 @@ public class PlantUmlServlet extends HttpServlet {
         return TranscoderUtil.getDefaultTranscoder();
     }
 
-    /**
-     * Get open http connection from URL.
-     *
-     * @param url URL to open connection
-     *
-     * @return open http connection
-     *
-     * @throws IOException if an input or output exception occurred
-     */
-    private static HttpURLConnection getConnection(URL url) throws IOException {
-        if (url.getProtocol().startsWith("https")) {
-            HttpsURLConnection con = (HttpsURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setReadTimeout(10000); // 10 seconds
-            // printHttpsCert(con);
-            con.connect();
-            return con;
-        } else {
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestMethod("GET");
-            con.setReadTimeout(10000); // 10 seconds
-            con.connect();
-            return con;
-        }
-    }
-
-    /**
-     * Get image input stream from URL.
-     *
-     * @param url URL to open connection
-     *
-     * @return response input stream from URL
-     *
-     * @throws IOException if an input or output exception occurred
-     */
-    private static InputStream getImage(URL url) throws IOException {
-        InputStream is = null;
-        HttpURLConnection con = getConnection(url);
-        is = con.getInputStream();
-        return is;
-    }
 
 }
